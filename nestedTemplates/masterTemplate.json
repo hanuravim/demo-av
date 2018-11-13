@@ -1,0 +1,185 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmRole": {
+            "type": "string",
+            "allowedValues": [
+                "sql",
+                "pro",
+                "img",
+                "dc",
+                "jmp"
+            ]
+        },
+        "objectId": {
+            "type": "string"
+        },
+        "virtualMachineAdminUserName": {
+            "type": "string"
+        },
+        "numberofVMs": {
+            "type": "int"
+        },
+        "virtualNetworkRG": {
+            "type": "string"
+        },
+        "virtualNetworkName": {
+            "type": "string"
+        },
+        "SubnetName": {
+            "type": "string"
+        },
+        "PrivateIP": {
+            "type": "array"
+        },
+        "virtualMachineSize": {
+            "type": "string"
+        },
+        "Password": {
+            "type": "securestring"
+        },
+        "vmtag": {
+            "type": "object"
+        },
+        "baseUrl": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "configuration": {
+            "provisioningVMURL": "[concat(parameters('baseUrl'),'/nestedTemplates/virtualmachines.json')]",
+            "NICURL": "[concat(parameters('baseUrl'),'/nestedTemplates/nic.json')]",
+            "NSGURL": "[concat(parameters('baseUrl'),'/nestedTemplates/nsg.json')]",
+            "keyvaultURL": "[concat(parameters('baseUrl'),'/nestedTemplates/keyvault.json')]",
+            "resourcelocksURL": "[concat(parameters('baseUrl'),'/nestedTemplates/resourcelocks.json')]",
+            "LogAnalyticsURL": "[concat(parameters('baseUrl'),'/nestedTemplates/loganalytics.json')]"
+        },
+        "vnetId": "[resourceId(parameters('virtualNetworkRG'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+        "SubnetRef": {
+            "geaviationsubnetref": "[concat(variables('vnetId'),'/subnets/',parameters('SubnetName'))]"
+        },
+        "vmNamePrefix": "[concat('ARVDR', parameters('vmRole'),'001')]",
+        "networkSecurityGroupName": "[concat(parameters('vmRole'),'-nsg')]",
+        "diagnosticStorageAccountName": "arveu2drasrstr001",
+        "keyVaultName": "gaveu2arvdrseckvt001",
+        "workspaceName": "gaveu2-arv-dr-mon-lan-001",
+        "virtualMachineAdminUserName": "[parameters('virtualMachineAdminUserName')]",
+        "virtualMachineAdminPassword": "[parameters('Password')]",
+        "virtualNetworkRG": "[parameters('virtualNetworkRG')]",
+        "virtualNetworkName": "[parameters('virtualNetworkName')]",
+        "SubnetName": "[parameters('SubnetName')]",
+        "PrivateIP": "[parameters('PrivateIP')]",
+        "numberofVMs": "[parameters('numberofVMs')]",
+        "virtualMachineSize": "[parameters('virtualMachineSize')]",
+        "Password": "[parameters('Password')]",
+        "baseUrl": "[parameters('baseUrl')]",
+        "keyVaultResourceID": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
+        "secretName": "Password",
+        "secretValue": "[parameters('Password')]",
+        "platform": "Windows",
+        "windowsOffer": "WindowsServer",
+        "windowsSku": "2012-R2-Datacenter",
+        "windowsPublisher": "MicrosoftWindowsServer",
+        "provisionVMAgent": true,
+        "linuxPublisher": "RedHat",
+        "linuxOffer": "RHEL",
+        "linuxSku": "7.2",
+        "vmNicName": "[concat(parameters('vmRole'), '-nic')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "KeyVault",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').keyvaultURL]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "objectId": {
+                        "value": "[parameters('objectId')]"
+                    },
+                    "Password": {
+                        "value": "[parameters('Password')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "LogAnalytics",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').LogAnalyticsURL]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('workspaceName')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "NIC",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').NICURL]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vmRole": {
+                        "value": "[parameters('vmRole')]"
+                    },
+                    "numberofVMs": {
+                        "value": "[parameters('numberofVMs')]"
+                    },
+                    "PrivateIP": {
+                        "value": "[parameters('PrivateIP')]"
+                    },
+                    "networkSecurityGroupName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    },
+                    "SubnetRef": {
+                        "value": "[variables('SubnetRef')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "NSG",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').NSGURL]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "networkSecurityGroupName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    }
+                }
+            }
+        }
+       
+    ],
+    "outputs": {
+        "Secret": {
+            "type": "securestring",
+            "value": "[variables('Password')]"
+        }
+    }
+}

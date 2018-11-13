@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmRole": {
+          "value":"webvm",
+          "metadata": {
+            "description": "Assign VM a role."
+          }
+        },
+        "objectId":{
+            "value": "b75d1a7e-637f-4e16-a74e-a4dfbd29f0eb",
+            "metadata": {
+                "description": "Object Id of the AD user. Get using Get-AzureRmADUser or Get-AzureRmADServicePrincipal cmdlets."
+              }
+        },
+        "virtualMachineAdminUserName": {
+            "value":"azadmin",
+            "metadata": {
+              "description": "Username for local administrator of the VM."
+            }
+        },
+        "virtualNetworkRG":{
+            "value":"av-vnet",
+            "metadata": {
+                "description": "Resource group of the existing virtual network"
+            } 
+        },
+        "virtualNetworkName":{
+            "value":"hypervasrvnet",
+            "metadata": {
+                "description": "Existing virtual network name"
+            } 
+        },
+        "SubnetName":{
+            "value":"Management",
+            "metadata": {
+                "description": "Existing virtual network name"
+            } 
+        },
+        "numberofVMs":{
+            "value": 1,
+            "metadata": {
+                "description": "Number of VMs to be deployed"
+            }
+        },
+        "PrivateIP":{
+            "value": [
+                  "192.10.1.10"
+                  
+            ],
+              "metadata": {
+                  "description": "Private IP. Add as per the number of VMs"
+              }    
+        },
+        "virtualMachineSize": {
+            "value":"Standard_DS3_v2",
+            "metadata": {
+                "description": "Desired size for the target Virtual machine"
+            }   
+            
+        },
+        "Password": {
+            "value":"Testuser@123",
+            "metadata": {
+                "description": "If Windows, specify the password for the OS username. If Linux, provide the SSH."
+            }
+        },
+        "vmtag":{
+            "value": {
+                "key1":"vmtype",
+                "value1":"dev"
+            },
+            "metadata": {
+               "description":"Enter the desired key-value pair values for tagging the VM" 
+            }
+        },
+        "baseUrl":{
+            "value": "https://raw.githubusercontent.com/hanuravim/demo-av/master/",
+            "metadata": {
+                "description": "Base URL for the code repository."
+            }
+        }
+          
+    }
+}    

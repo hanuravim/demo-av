@@ -41,9 +41,9 @@
   },
   "variables": {
     "configuration":{
-        "provisioningVMURL": "[concat(parameters('baseUrl'),'ge-aviation/nestedTemplates/virtualmachines.json')]",
-        "keyvaultURL":"[concat(parameters('baseUrl'),'ge-aviation/nestedTemplates/keyvault.json')]",
-        "resourcelocksURL":"[concat(parameters('baseUrl'),'ge-aviation/nestedTemplates/resourcelocks.json')]"
+        "provisioningVMURL": "[concat(parameters('baseUrl'),'/nestedTemplates/virtualmachines.json')]",
+        "keyvaultURL":"[concat(parameters('baseUrl'),'/nestedTemplates/keyvault.json')]",
+        "resourcelocksURL":"[concat(parameters('baseUrl'),'/nestedTemplates/resourcelocks.json')]"
     },
     "vmNamePrefix":"[concat('ARVDR', parameters('vmRole'),'001')]",
     "virtualMachineAdminUserName":"[parameters('virtualMachineAdminUserName')]",

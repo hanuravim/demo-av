@@ -9,7 +9,7 @@
             "type": "int"
         },
         "PrivateIP": {
-            "type": "string"
+            "type": "array"
         },
         "networkSecurityGroupName": {
             "type": "string"

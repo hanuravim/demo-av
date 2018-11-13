@@ -6,7 +6,7 @@
             "type": "string"
         },
         "numberofVMs": {
-            "type": "string"
+            "type": "int"
         },
         "PrivateIP": {
             "type": "string"

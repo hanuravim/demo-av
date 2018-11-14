@@ -1,64 +1,61 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "keyVaultName": {
-            "type": "string"
-          },
-          "objectId": {
-            "type": "string"
-          },
-          "Password": {
-            "type": "string"
-          }
-    },
-    "variables": {
-      "secretName":"[parameters('Password')]"  
-    },
-    "resources": [
-        {
-            "type": "Microsoft.KeyVault/vaults",
-            "name": "[parameters('keyVaultName')]",
-            "apiVersion": "2015-06-01",
-            "location": "[resourceGroup().location]",
-            "tags": {
-              "displayName": "KeyVault"
-            },
-            "properties": {
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "keyVaultName": {
+          "type": "string"
+      },
+      "objectId": {
+          "type": "string"
+      },
+      "secretValue": {
+          "type": "securestring"
+      }
+  },
+  "variables": {},
+  "resources": [
+      {
+          "type": "Microsoft.KeyVault/vaults",
+          "name": "[parameters('keyVaultName')]",
+          "apiVersion": "2015-06-01",
+          "location": "[resourceGroup().location]",
+          "properties": {
+              "sku": {
+                  "family": "A",
+                  "name": "Standard"
+              },
               "enabledForDeployment": true,
               "enabledForTemplateDeployment": true,
               "enabledForDiskEncryption": true,
               "tenantId": "[subscription().tenantId]",
               "accessPolicies": [
-                {
-                  "tenantId": "[subscription().tenantId]",
-                  "objectId": "[parameters('objectId')]",
-                  "permissions": {
-                    "keys": ["all" ],
-                    "secrets": [ "all" ]
+                  {
+                      "tenantId": "[subscription().tenantId]",
+                      "objectId": "[parameters('objectId')]",
+                      "permissions": {
+                          "keys": [
+                              "All"
+                          ],
+                          "secrets": [
+                              "All"
+                          ]
+                      }
                   }
-                }
-              ],
-              "sku": {
-                "name": "standard",
-                "family": "A"
-              }
-            },
-            "resources": [
-              {
-                "type": "secrets",
-                "name": "[variables('secretName')]",
-                "apiVersion": "2015-06-01",
-                "tags": { "displayName": "secret" },
-                "properties": {
-                  "value": "[parameters('Password')]"
-                },
-                "dependsOn": [
-                  "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
-                ]
-              }
-            ]
-        }       
-    ],
-    "outputs": {}
+              ]
+          }
+      },
+      {
+          "type": "Microsoft.KeyVault/vaults/secrets",
+          "name": "[concat(parameters('keyVaultName'),'/','local-admin-password')]",
+          "apiVersion": "2015-06-01",
+          "properties": {
+              "contentType": "text/plain",
+              "value": "[parameters('secretValue')]"
+          },
+          "dependsOn": [
+              "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+          ]
+      }
+  ],
+  "outputs": {}
 }

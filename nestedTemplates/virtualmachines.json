@@ -71,7 +71,7 @@
         {
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('arvdr',parameters('vmRole'),'00', copyIndex(1))]",
+            "name": "[concat(parameters('vmName'), copyIndex(1))]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "[parameters('vmtag').key1]": "[parameters('vmtag').value1]"
@@ -110,7 +110,7 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[concat(parameters('vmName')]",
+                    "computerName": "[concat(parameters('vmName'), copyIndex(1))]",
                     "adminUsername": "[parameters('virtualMachineAdminUserName')]",
                     "adminPassword": "[parameters('virtualMachineAdminPassword')]",
                     "windowsConfiguration": {

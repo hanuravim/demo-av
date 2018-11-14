@@ -82,7 +82,7 @@
         {
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat(parameters('vmRole'), copyIndex(1))]",
+            "name": "[concat('arvdr',parameters('vmRole'),'00', copyIndex(1))]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "[parameters('vmtag').key1]": "[parameters('vmtag').value1]"
@@ -93,8 +93,6 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticStorageAccountName'))]"
-                
-               
             ],
             "properties": {
                 "hardwareProfile": {
@@ -111,7 +109,7 @@
                         "name": "[concat('gaveu2-arv-dr-osd-dsk-', parameters('vmRole'), '-00', copyIndex(1))]",
                         "createOption": "FromImage",
                         "managedDisk": {
-                            "storageAccountType": "Premium_LRS"
+                            "storageAccountType": "Standard_LRS"
                         },
                         "caching": "ReadWrite"
                     },
@@ -125,7 +123,7 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[concat(parameters('vmRole'), copyIndex(1),'-OSDisk')]",
+                    "computerName": "[concat('arvdr',parameters('vmRole'),'00', copyIndex(1))]",
                     "adminUsername": "[parameters('virtualMachineAdminUserName')]",
                     "adminPassword": "[parameters('virtualMachineAdminPassword')]",
                     "windowsConfiguration": {
@@ -135,7 +133,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('vmRole'), copyindex(1),'-nic'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gaveu2-arv-dr-',parameters('vmRole'),'-nic-00',copyindex(1))]"
                         }
                     ]
                 },

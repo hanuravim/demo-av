@@ -71,8 +71,8 @@
                 "count": "[parameters('numberofVMs')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticStorageAccountName'))]",
-                "nicLoop"
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticStorageAccountName'))]"
+                
                
             ],
             "properties": {

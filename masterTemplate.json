@@ -1,114 +1,325 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "vmRole": {
-      "type": "string"
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmRole": {
+            "type": "string",
+            "allowedValues": [
+                "sql",
+                "pro",
+                "img",
+                "dc",
+                "jmp"
+            ]
+        },
+        "objectId": {
+            "type": "string"
+        },
+        "virtualMachineAdminUserName": {
+            "type": "string"
+        },
+        "numberofVMs": {
+            "type": "int"
+        },
+        "virtualNetworkRG": {
+            "type": "string"
+        },
+        "virtualNetworkName": {
+            "type": "string"
+        },
+        "SubnetName": {
+            "type": "string"
+        },
+        "PrivateIP": {
+            "type": "array"
+        },
+        "virtualMachineSize": {
+            "type": "string"
+        },
+        "virtualMachineAdminPassword": {
+            "type": "securestring"
+        },
+        "vmtag": {
+            "type": "object"
+        },
+        "baseUrl": {
+            "type": "string"
+        }
     },
-    "objectId":{
-        "type": "string"
+    "variables": {
+        "networkSecurityGroupName": "[concat(parameters('vmRole'),'-nsg')]",
+        "diagnosticStorageAccountName": "arveu2drasrstr001",
+        "keyVaultName": "gaveu2arvdrseckvt001",
+        "keyVaultResourceID": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
+        "workspaceName": "gaveu2-arv-dr-mon-lan-001",
+        "configuration": {
+            "provisioningVMURL": "[concat(parameters('baseUrl'),'/nestedTemplates/virtualmachines.json')]",
+            "NICURL": "[concat(parameters('baseUrl'),'/nestedTemplates/NIC.json')]",
+            "NSGURL": "[concat(parameters('baseUrl'),'/nestedTemplates/NSG.json')]",
+            "keyvaultURL": "[concat(parameters('baseUrl'),'/nestedTemplates/keyVault.json')]",
+            "resourcelocksURL": "[concat(parameters('baseUrl'),'/nestedTemplates/resourcelocks.json')]",
+            "LogAnalyticsURL": "[concat(parameters('baseUrl'),'/nestedTemplates/LogAnalytics.json')]",
+            "StorageAccountURL": "[concat(parameters('baseUrl'),'/nestedTemplates/storageaccount.json')]"
+        },
+        "vnetsettings": {
+            "vnetId": "[resourceId(parameters('virtualNetworkRG'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]"
+        },
+        "SubnetRef": {
+            "geaviationsubnetref": "[concat(variables('vnetsettings').vnetId,'/subnets/',parameters('SubnetName'))]"
+        },
+        "vmsettings": {
+            "vmNamePrefix": "[concat('ARVDR', parameters('vmRole'),'001')]",
+            "secretName": "virtualMachineAdminPassword",
+            "secretValue": "[parameters('virtualMachineAdminPassword')]",
+            "platform": "Windows",
+            "windowsOffer": "WindowsServer",
+            "windowsSku": "2012-R2-Datacenter",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "provisionVMAgent": true,
+            "linuxPublisher": "RedHat",
+            "linuxOffer": "RHEL",
+            "linuxSku": "7.2",
+            "vmNicName": "[concat(parameters('vmRole'), '-nic')]",
+            "PrivateIP": "[parameters('PrivateIP')]"
+        }
     },
-    "virtualMachineAdminUserName": {
-        "type": "string"
-    },
-    "numberofVMs": {
-        "type": "int"
-    },
-    "virtualNetworkRG": {
-        "type": "string"
-    },
-    "virtualNetworkName": {
-        "type": "string"
-    },
-    "SubnetName": {
-        "type": "string"
-    },
-    "PrivateIP": {
-        "type": "array"
-    },
-    "virtualMachineSize": {
-        "type": "string"
-    },
-    "Password": {
-        "type": "securestring"
-    },
-    "vmtag":{
-       "type": "object"
-    },
-    "baseUrl":{
-        "type": "string"
-    }
-  },
-  "variables": {
-    "configuration":{
-        "provisioningVMURL": "[concat(parameters('baseUrl'),'/nestedTemplates/virtualmachines.json')]",
-        "keyvaultURL":"[concat(parameters('baseUrl'),'/nestedTemplates/keyvault.json')]",
-        "resourcelocksURL":"[concat(parameters('baseUrl'),'/nestedTemplates/resourcelocks.json')]"
-    },
-    "vmNamePrefix":"[concat('ARVDR', parameters('vmRole'),'001')]",
-    "virtualMachineAdminUserName":"[parameters('virtualMachineAdminUserName')]",
-    "virtualMachineAdminPassword":"[parameters('Password')]",
-    "virtualNetworkRG":"[parameters('virtualNetworkRG')]",
-    "virtualNetworkName":"[parameters('virtualNetworkName')]",
-    "SubnetName":"[parameters('SubnetName')]",
-    "PrivateIP":"[parameters('PrivateIP')]",
-    "numberofVMs":"[parameters('numberofVMs')]",
-    "virtualMachineSize":"[parameters('virtualMachineSize')]",
-    "Password":"[parameters('Password')]",
-    "baseUrl":"[parameters('baseUrl')]"
-  },
-  "resources":[
-    {
-        "type": "Microsoft.Resources/deployments",
-        "name": "ProvisioningVirtualMachine",
-        "apiVersion": "2015-01-01",
-        "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-                "uri": "[variables('configuration').provisioningVMURL]",
-                "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-                "vmRole": {
-                  "value":"[parameters('vmRole')]"
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "KeyVault",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').keyvaultURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "objectId": {
-                    "value":"[parameters('objectId')]"
-                  },
-                "virtualMachineAdminUserName": {
-                    "value":"[variables('virtualMachineAdminUserName')]"
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "objectId": {
+                        "value": "[parameters('objectId')]"
+                    },
+                    "virtualMachineAdminPassword": {
+                        "value": "[parameters('virtualMachineAdminPassword')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "LogAnalytics",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').LogAnalyticsURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "numberofVMs":{
-                    "value":"[variables('numberofVMs')]"
+                "parameters": {
+                    "workspaceName": {
+                        "value": "[variables('workspaceName')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "NSG",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').NSGURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "virtualNetworkRG":{
-                    "value":"[variables('virtualNetworkRG')]"
+                "parameters": {
+                    "networkSecurityGroupName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "NIC",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "NSG"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').NICURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "virtualNetworkName":{
-                    "value":"[variables('virtualNetworkName')]"
+                "parameters": {
+                    "vmRole": {
+                        "value": "[parameters('vmRole')]"
+                    },
+                    "numberofVMs": {
+                        "value": "[parameters('numberofVMs')]"
+                    },
+                    "PrivateIP": {
+                        "value": "[parameters('PrivateIP')]"
+                    },
+                    "networkSecurityGroupName": {
+                        "value": "[variables('networkSecurityGroupName')]"
+                    },
+                    "SubnetRef": {
+                        "value": "[variables('SubnetRef').geaviationsubnetref]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "ProvisioningVirtualMachine",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "KeyVault",
+                "NIC",
+                "StorageAccount"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').provisioningVMURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "SubnetName":{
-                    "value":"[variables('SubnetName')]"
+                "parameters": {
+                    "vmRole": {
+                        "value": "[parameters('vmRole')]"
+                    },
+                    "objectId": {
+                        "value": "[parameters('objectId')]"
+                    },
+                    "platform": {
+                        "value": "[variables('vmsettings').platform]"
+                    },
+                    "windowsPublisher": {
+                        "value": "[variables('vmsettings').windowsPublisher]"
+                    },
+                    "windowsOffer": {
+                        "value": "[variables('vmsettings').windowsOffer]"
+                    },
+                    "windowsSku": {
+                        "value": "[variables('vmsettings').windowsSku]"
+                    },
+                    "linuxPublisher": {
+                        "value": "[variables('vmsettings').linuxPublisher]"
+                    },
+                    "linuxOffer": {
+                        "value": "[variables('vmsettings').linuxOffer]"
+                    },
+                    "linuxSku": {
+                        "value": "[variables('vmsettings').linuxSku]"
+                    },
+                    "virtualMachineAdminUserName": {
+                        "value": "[parameters('virtualMachineAdminUserName')]"
+                    },
+                    "numberofVMs": {
+                        "value": "[parameters('numberofVMs')]"
+                    },
+                    "virtualNetworkRG": {
+                        "value": "[parameters('virtualNetworkRG')]"
+                    },
+                    "virtualNetworkName": {
+                        "value": "[parameters('virtualNetworkName')]"
+                    },
+                    "SubnetName": {
+                        "value": "[parameters('SubnetName')]"
+                    },
+                    "PrivateIP": {
+                        "value": "[parameters('PrivateIP')]"
+                    },
+                    "virtualMachineSize": {
+                        "value": "[parameters('virtualMachineSize')]"
+                    },
+                    "virtualMachineAdminPassword": {
+                        "value": "[parameters('virtualMachineAdminPassword')]"
+                    },
+                    "diagnosticStorageAccountName": {
+                        "value": "[variables('diagnosticStorageAccountName')]"
+                    },
+                    "vmtag": {
+                        "value": "[parameters('vmtag')]"
+                    },
+                    "baseUrl": {
+                        "value": "[parameters('baseUrl')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "vm/omsExtension",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "ProvisioningVirtualMachine",
+                "LogAnalytics"
+            ],
+            "properties": {
+                "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                "type": "MicrosoftMonitoringAgent",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').customerId]"
                 },
-                "PrivateIP":{
-                    "value":"[variables('PrivateIP')]"
+                "protectedSettings": {
+                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').primarySharedKey]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "ResourceLocks",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "KeyVault",
+                "StorageAccount"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').resourcelocksURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "virtualMachineSize": {
-                    "value":"[variables('virtualMachineSize')]"
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[variables('keyVaultName')]"
+                    },
+                    "diagnosticStorageAccountName": {
+                        "value": "[variables('diagnosticStorageAccountName')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "StorageAccount",
+            "apiVersion": "2015-01-01",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('configuration').StorageAccountURL]",
+                    "contentVersion": "1.0.0.0"
                 },
-                "Password": {
-                    "value":"[variables('Password')]"
-                },
-                "vmtag":{
-                    "value": "[parameters('vmtag')]"
-                },
-                "baseUrl":{
-                    "value":"[variables('baseUrl')]"
+                "parameters": {
+                    "diagnosticStorageAccountName": {
+                        "value": "[variables('diagnosticStorageAccountName')]"
+                    }
                 }
             }
         }
-        
+    ],
+    "outputs": {
+        "Secret": {
+            "type": "string",
+            "value": "[parameters('virtualMachineAdminPassword')]"
+        }
     }
-  ],
-  "outputs": {}  
 }

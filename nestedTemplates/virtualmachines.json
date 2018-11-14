@@ -5,6 +5,9 @@
         "vmRole": {
             "type": "string"
         },
+        "vmName": {
+            "type": "string"
+        },
         "objectId": {
             "type": "string"
         },
@@ -107,7 +110,7 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[concat('arvdr',parameters('vmRole'),'00', copyIndex(1))]",
+                    "computerName": "[concat(parameters('vmName')]",
                     "adminUsername": "[parameters('virtualMachineAdminUserName')]",
                     "adminPassword": "[parameters('virtualMachineAdminPassword')]",
                     "windowsConfiguration": {

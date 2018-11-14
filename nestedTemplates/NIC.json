@@ -22,7 +22,7 @@
     "resources": [
         {
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('gaveu2-arv-dr-', parameters('vmRole'),'-00', copyindex(1))]",
+            "name": "[concat('gaveu2-arv-dr-', parameters('vmRole'),'nic-00', copyindex(1))]",
             "apiVersion": "2016-03-30",
             "location": "[resourceGroup().location]",
             "copy": {
@@ -35,7 +35,7 @@
                         "name": "ipconfig1",
                         "properties": {
                             "subnet": {
-                                "id": "[parameters('SubnetRef').geaviationsubnetref]"
+                                "id": "[parameters('SubnetRef')]"
                             },
                             "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[parameters('PrivateIP')[copyIndex()]]"

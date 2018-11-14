@@ -51,7 +51,7 @@
                 "enableIPForwarding": false
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+                
             ]
         }
     ]

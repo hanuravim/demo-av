@@ -72,8 +72,8 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Storage/storageAccounts/', parameters('diagnosticStorageAccountName'))]",
-                "nicLoop",
-                "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+                "nicLoop"
+               
             ],
             "properties": {
                 "hardwareProfile": {

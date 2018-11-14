@@ -8,6 +8,9 @@
         "objectId": {
             "type": "string"
         },
+        "platform": {
+            "type": "string"
+        },
         "virtualMachineAdminUserName": {
             "type": "string"
         },

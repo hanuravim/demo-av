@@ -29,7 +29,7 @@
         "virtualMachineSize": {
             "type": "string"
         },
-        "Password": {
+        "virtualMachineAdminPassword": {
             "type": "securestring"
         },
         "vmtag": {
@@ -106,7 +106,7 @@
                 "osProfile": {
                     "computerName": "[concat(parameters('vmRole'), copyIndex(1),'-OSDisk')]",
                     "adminUsername": "[parameters('virtualMachineAdminUserName')]",
-                    "adminPassword": "[parameters('Password')]",
+                    "adminPassword": "[parameters('virtualMachineAdminPassword')]",
                     "windowsConfiguration": {
                         "provisionVMAgent": true
                     }

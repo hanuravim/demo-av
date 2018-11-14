@@ -1,0 +1,85 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmRole": {
+            "value": "sql",
+            "metadata": {
+                "description": "Assign VM a role."
+            }
+        },
+        "objectId": {
+            "value": "cf0d7c6b-44c0-47f5-a936-7ec29f04457b",
+            "metadata": {
+                "description": "Object Id of the AD user. Get using Get-AzureRmADUser or Get-AzureRmADServicePrincipal cmdlets."
+            }
+        },
+        "virtualNetworkRG": {
+            "value": "av-vnet",
+            "metadata": {
+                "description": "Resource group of the existing virtual network"
+            }
+        },
+        "virtualNetworkName": {
+            "value": "hypervasrvnet",
+            "metadata": {
+                "description": "Existing virtual network name"
+            }
+        },
+        "SubnetName": {
+            "value": "Management",
+            "metadata": {
+                "description": "Existing virtual network name"
+            }
+        },
+        "numberofVMs": {
+            "value": 1,
+            "metadata": {
+                "description": "Number of VMs to be deployed"
+            }
+        },
+        "PrivateIP": {
+            "value": [
+                "192.10.1.11"
+            ],
+            "metadata": {
+                "description": "Private IP. Add as per the number of VMs"
+            }
+        },
+        "virtualMachineSize": {
+            "value": "Standard_DS3_v2",
+            "metadata": {
+                "description": "Desired size for the target Virtual machine"
+            }
+        },
+        "virtualMachineAdminUserName": {
+            "value": "azadmin",
+            "metadata": {
+                "description": "Username for local administrator of the VM."
+            }
+        },
+        "virtualMachineAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/6e00b504-dddb-4435-a384-8dcf6f294c6f/resourceGroups/test/providers/Microsoft.KeyVault/vaults/demoemskvt"
+                },
+                "secretName": "virtualMachineAdminPassword"
+            }
+        },
+        "vmtag": {
+            "value": {
+                "key1": "vmtype",
+                "value1": "sql"
+            },
+            "metadata": {
+                "description": "Enter the desired key-value pair values for tagging the VM"
+            }
+        },
+        "baseUrl": {
+            "value": "https://raw.githubusercontent.com/hanuravim/demo-av/master",
+            "metadata": {
+                "description": "Base URL for the code repository."
+            }
+        }
+    }
+}

@@ -133,7 +133,7 @@
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gaveu2-arv-dr-',parameters('vmRole'),'-nic-00',copyindex(1))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gaveu2-arv-dr-',parameters('vmRole'),'-nic-00',copyindex(1)))]"
                         }
                     ]
                 },

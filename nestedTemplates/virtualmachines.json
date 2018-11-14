@@ -11,6 +11,24 @@
         "platform": {
             "type": "string"
         },
+        "windowsPublisher": {
+            "type": "string"
+        },
+        "windowsOffer": {
+            "type": "string"
+        },
+        "windowsSku": {
+            "type": "string"
+        },
+        "linuxPublisher": {
+            "type": "string"
+        },
+        "linuxOffer": {
+            "type": "string"
+        },
+        "linuxSku": {
+            "type": "string"
+        },
         "virtualMachineAdminUserName": {
             "type": "string"
         },

@@ -192,6 +192,9 @@
                     "vmRole": {
                         "value": "[parameters('vmRole')]"
                     },
+                    "vmName": {
+                        "value": "[variables('vmNamePrefix')]"
+                    },
                     "objectId": {
                         "value": "[parameters('objectId')]"
                     },

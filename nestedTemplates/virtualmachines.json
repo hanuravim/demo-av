@@ -62,6 +62,9 @@
         "diagnosticStorageAccountName": {
             "type": "string"
         },
+        "workspaceName": {
+            "type": "string"
+        },
         "baseUrl": {
             "type": "string"
         }
@@ -80,7 +83,6 @@
                 "name": "virtualMachineLoop",
                 "count": "[parameters('numberofVMs')]"
             },
-            
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('virtualMachineSize')]"
@@ -130,7 +132,30 @@
                         "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagnosticStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
-            }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "Microsoft.EnterpriseCloud.Monitoring",
+                    "apiVersion": "2017-03-30",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('vmRole'), copyIndex(1)))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+                        "type": "MicrosoftMonitoringAgent",
+                        "typeHandlerVersion": "1.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]"
+                        },
+                        "protectedSettings": {
+                            "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]"
+                        }
+                    }
+                }
+            ]
         }
     ],
     "outputs": {}

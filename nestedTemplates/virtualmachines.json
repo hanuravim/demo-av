@@ -3,70 +3,78 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "vmRole": {
-          "type": "string"
+            "type": "string"
+        },
+        "vmName": {
+            "type": "string"
         },
         "objectId": {
+            "type": "string"
+        },
+        "platform": {
+            "type": "string"
+        },
+        "windowsPublisher": {
+            "type": "string"
+        },
+        "windowsOffer": {
+            "type": "string"
+        },
+        "windowsSku": {
+            "type": "string"
+        },
+        "linuxPublisher": {
+            "type": "string"
+        },
+        "linuxOffer": {
+            "type": "string"
+        },
+        "linuxSku": {
             "type": "string"
         },
         "virtualMachineAdminUserName": {
             "type": "string"
         },
-        "numberofVMs":{
+        "numberofVMs": {
             "type": "int"
         },
-        "virtualNetworkRG":{
+        "virtualNetworkRG": {
             "type": "string"
         },
-        "virtualNetworkName":{
+        "virtualNetworkName": {
             "type": "string"
         },
-        "SubnetName":{
+        "SubnetName": {
             "type": "string"
         },
-        "PrivateIP":{
+        "PrivateIP": {
             "type": "array"
         },
         "virtualMachineSize": {
             "type": "string"
         },
-        "Password-Or-ssh": {
+        "virtualMachineAdminPassword": {
             "type": "securestring"
         },
-        "vmtag":{
+        "vmtag": {
             "type": "object"
+        },
+        "diagnosticStorageAccountName": {
+            "type": "string"
+        },
+        "workspaceName": {
+            "type": "string"
+        },
+        "baseUrl": {
+            "type": "string"
         }
-        
     },
-    "variables": {
-        "workspaceName": "gaveu2-arv-dr-mon-lan-001",
-		"keyVaultName":"[concat('keyvault', uniqueString(resourceGroup().id))]",
-        "keyVaultResourceID": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults/', variables('keyVaultName'))]",
-        "secretName": "Password-Or-ssh",
-        "secretValue":"[parameters('Password-Or-ssh')]",
-        "platform":"Windows",
-        "windowsOffer": "WindowsServer",
-        "windowsSku": "2012-R2-Datacenter",
-        "windowsPublisher": "MicrosoftWindowsServer",
-        "provisionVMAgent":true,
-        "linuxPublisher": "RedHat",
-        "linuxOffer": "RHEL",
-        "linuxSku": "7.2",
-        "vmNicName": "[concat(parameters('vmRole'), '-nic')]",
-        "networkSecurityGroupName":"[concat(parameters('vmRole'), '-nsg')]",
-        "diagnosticStorageAccountName": "[concat('diagst', uniqueString(resourceGroup().id))]",
-        "vnetId": "[resourceId(parameters('virtualNetworkRG'),'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
-        "SubnetRef":{
-            "geaviationsubnetref": "[concat(variables('vnetId'),'/subnets/',parameters('SubnetName'))]"
-        }
-        
-    },    
-    "resources":[
-      
-       
+    "variables": {},
+    "resources": [
         {
             "apiVersion": "2017-03-30",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat(parameters('vmRole'), copyIndex(1))]",
+            "name": "[concat(parameters('vmName'), copyIndex(1))]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "[parameters('vmtag').key1]": "[parameters('vmtag').value1]"
@@ -75,56 +83,53 @@
                 "name": "virtualMachineLoop",
                 "count": "[parameters('numberofVMs')]"
             },
-            "dependsOn": [
-               
-            ],
             "properties": {
                 "hardwareProfile": {
                     "vmSize": "[parameters('virtualMachineSize')]"
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "[if(equals(variables('platform'), 'Windows'), variables('windowsPublisher'), variables('linuxPublisher'))]",
-                        "offer": "[if(equals(variables('platform'), 'Windows'), variables('windowsOffer'), variables('linuxOffer'))]",
+                        "publisher": "[if(equals(parameters('platform'), 'Windows'), parameters('windowsPublisher'), parameters('linuxPublisher'))]",
+                        "offer": "[if(equals(parameters('platform'), 'Windows'), parameters('windowsOffer'), parameters('linuxOffer'))]",
                         "version": "latest",
-                        "sku": "[if(equals(variables('platform'), 'Windows'), variables('windowsSku'), variables('linuxSku'))]"
+                        "sku": "[if(equals(parameters('platform'), 'Windows'), parameters('windowsSku'), parameters('linuxSku'))]"
                     },
-                "osDisk": {
-                    "name": "[concat(parameters('vmRole'), copyIndex(1),'-OSDisk')]",
-                    "createOption": "FromImage",
-                    "managedDisk": {
-                    "storageAccountType": "Premium_LRS"
+                    "osDisk": {
+                        "name": "[concat('gaveu2-arv-dr-osd-dsk-', parameters('vmRole'), '-00', copyIndex(1))]",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS"
+                        },
+                        "caching": "ReadWrite"
                     },
-                "caching": "ReadWrite"
-                },
-                "dataDisks": [
-                    {
-                      "createOption": "Empty",
-                      "lun": 0,
-                      "diskSizeGB": 1,
-                      "caching": "None"
-                    }
-                ]
+                    "dataDisks": [
+                        {
+                            "createOption": "Empty",
+                            "lun": 0,
+                            "diskSizeGB": 1,
+                            "caching": "None"
+                        }
+                    ]
                 },
                 "osProfile": {
-                    "computerName": "[concat(parameters('vmRole'), copyIndex(1),'-OSDisk')]",
+                    "computerName": "[concat(parameters('vmName'), copyIndex(1))]",
                     "adminUsername": "[parameters('virtualMachineAdminUserName')]",
-                    "adminPassword": "[parameters('Password-Or-ssh')]",
+                    "adminPassword": "[parameters('virtualMachineAdminPassword')]",
                     "windowsConfiguration": {
-                        "provisionVMAgent":true
+                        "provisionVMAgent": true
                     }
                 },
                 "networkProfile": {
                     "networkInterfaces": [
-                    {
-                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('vmRole'), copyindex(1),'-nic'))]"
-                    }
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gaveu2-arv-dr-',parameters('vmRole'),'-nic-00',copyindex(1)))]"
+                        }
                     ]
                 },
                 "diagnosticsProfile": {
                     "bootDiagnostics": {
                         "enabled": true,
-                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('diagnosticStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
+                        "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('diagnosticStorageAccountName')), '2016-01-01').primaryEndpoints.blob]"
                     }
                 }
             },
@@ -143,18 +148,15 @@
                         "typeHandlerVersion": "1.0",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                        "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').customerId]"
-                    },
-                    "protectedSettings": {
-                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').primarySharedKey]"
+                            "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').customerId]"
+                        },
+                        "protectedSettings": {
+                            "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', parameters('workspaceName')), '2015-03-20').primarySharedKey]"
+                        }
                     }
-                    }
-            }
-           
+                }
             ]
         }
-       
-            
     ],
     "outputs": {}
-}    
+}

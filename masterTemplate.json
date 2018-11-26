@@ -12,8 +12,21 @@
                 "jmp"
             ]
         },
+        "StandAlone-Or-MemberServer": {
+            "type": "String",
+            "allowedValues": [
+                "StandAlone",
+                "MemberServer"
+            ],
+            "metadata": {
+                "description": "If MemberServer, provide values 'adDomainName','OUPath','adUserName' in variables section of the masterTemplate.json"
+            }
+        },
         "objectId": {
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description":"Object Id of the Service Principal Name created in Azure AD"
+            }
         },
         "virtualMachineAdminUserName": {
             "type": "string"
@@ -39,6 +52,13 @@
         "virtualMachineAdminPassword": {
             "type": "securestring"
         },
+        "ADAdminPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description":"Leave blank if deploying a StandAlone server"
+            }
+        },
         "vmtag": {
             "type": "object"
         },
@@ -47,6 +67,9 @@
         }
     },
     "variables": {
+        "adDomainName":"test.local",
+        "OUPath":"'OU=Computers,DC=test,DC=local'",
+       "adUserName":"azadmin",
         "networkSecurityGroupName": "[concat(parameters('vmRole'),'-nsg')]",
         "diagnosticStorageAccountName": "arveu2drasrstr001",
         "keyVaultName": "gaveu2arvdrseckvt001",
@@ -58,7 +81,6 @@
             "NSGURL": "[concat(parameters('baseUrl'),'/nestedTemplates/NSG.json')]",
             "keyvaultURL": "[concat(parameters('baseUrl'),'/nestedTemplates/keyVault.json')]",
             "resourcelocksURL": "[concat(parameters('baseUrl'),'/nestedTemplates/resourcelocks.json')]",
-            "LogAnalyticsURL": "[concat(parameters('baseUrl'),'/nestedTemplates/LogAnalytics.json')]",
             "StorageAccountURL": "[concat(parameters('baseUrl'),'/nestedTemplates/storageaccount.json')]"
         },
         "vnetsettings": {
@@ -68,7 +90,7 @@
             "geaviationsubnetref": "[concat(variables('vnetsettings').vnetId,'/subnets/',parameters('SubnetName'))]"
         },
         "vmsettings": {
-            "vmNamePrefix": "[concat('ARVDR', parameters('vmRole'),'001')]",
+            "vmName": "[concat('arvdr',parameters('vmRole'),'00')]",
             "secretName": "virtualMachineAdminPassword",
             "secretValue": "[parameters('virtualMachineAdminPassword')]",
             "platform": "Windows",
@@ -108,19 +130,16 @@
             }
         },
         {
-            "type": "Microsoft.Resources/deployments",
-            "name": "LogAnalytics",
-            "apiVersion": "2015-01-01",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "name": "[variables('workspaceName')]",
+            "apiVersion": "2015-11-01-preview",
+            "location": "eastus",
             "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('configuration').LogAnalyticsURL]",
-                    "contentVersion": "1.0.0.0"
+                "sku": {
+                    "name": "PerNode"
                 },
-                "parameters": {
-                    "workspaceName": {
-                        "value": "[variables('workspaceName')]"
-                    }
+                "features": {
+                    "searchVersion": 1
                 }
             }
         },
@@ -193,7 +212,7 @@
                         "value": "[parameters('vmRole')]"
                     },
                     "vmName": {
-                        "value": "[variables('vmNamePrefix')]"
+                        "value": "[variables('vmsettings').vmName]"
                     },
                     "objectId": {
                         "value": "[parameters('objectId')]"
@@ -246,34 +265,15 @@
                     "diagnosticStorageAccountName": {
                         "value": "[variables('diagnosticStorageAccountName')]"
                     },
+                    "workspaceName": {
+                        "value": "[variables('workspaceName')]"
+                    },
                     "vmtag": {
                         "value": "[parameters('vmtag')]"
                     },
                     "baseUrl": {
                         "value": "[parameters('baseUrl')]"
                     }
-                }
-            }
-        },
-        {
-            "name": "vm/omsExtension",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "apiVersion": "2015-06-15",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "ProvisioningVirtualMachine",
-                "LogAnalytics"
-            ],
-            "properties": {
-                "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-                "type": "MicrosoftMonitoringAgent",
-                "typeHandlerVersion": "1.0",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "workspaceId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').customerId]"
-                },
-                "protectedSettings": {
-                    "workspaceKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces/', variables('workspaceName')), '2015-03-20').primarySharedKey]"
                 }
             }
         },
@@ -317,12 +317,36 @@
                     }
                 }
             }
+        },
+        {
+            "condition": "[equals(parameters('StandAlone-Or-MemberServer'), 'MemberServer')]",
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(concat(variables('vmsettings').vmName,copyIndex(1)),'/joindomain')]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "DomainExtensionLoop",
+                "count": "[parameters('numberofVMs')]"
+            },
+            "dependsOn": [
+                "ProvisioningVirtualMachine"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "JsonADDomainExtension",
+                "typeHandlerVersion": "1.0",
+                "settings": {
+                    "Name": "[variables('adDomainName')]",
+                    "User": "[concat(variables('adDomainName'), '\\', variables('adUserName'))]",
+                    "Restart": "true",
+                    "Options": "3",
+                    "OUPath": "[variables('OUPath')]"
+                },
+                "protectedsettings": {
+                    "Password": "[parameters('adAdminPassword')]"
+                }
+            }
         }
     ],
-    "outputs": {
-        "Secret": {
-            "type": "string",
-            "value": "[parameters('virtualMachineAdminPassword')]"
-        }
-    }
+    "outputs": {}
 }
